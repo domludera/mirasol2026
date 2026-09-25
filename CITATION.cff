@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this code or the released models, please cite the paper below."
+title: "A Low-Cost AI Stethoscope for Resource-Constrained Heart Murmur Screening — code and models"
+license: MIT
+repository-code: "https://github.com/domludera/mirasol2026"
+authors:
+  - family-names: "Ludera"
+    given-names: "Dominik"
+    affiliation: "Concordia University"
+  - family-names: "Kersten-Oertel"
+    given-names: "Marta"
+    affiliation: "Concordia University"
+preferred-citation:
+  type: conference-paper
+  title: "A Low-Cost AI Stethoscope for Resource-Constrained Heart Murmur Screening"
+  authors:
+    - family-names: "Ludera"
+      given-names: "Dominik"
+      affiliation: "Concordia University"
+    - family-names: "Kersten-Oertel"
+      given-names: "Marta"
+      affiliation: "Concordia University"
+  collection-title: "MIRASOL Workshop, Medical Image Computing and Computer Assisted Intervention (MICCAI 2026)"
+  publisher:
+    name: "Springer"
+  year: 2026

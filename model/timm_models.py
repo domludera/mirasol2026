@@ -1,0 +1,130 @@
+"""
+Timm-based audio classification models (FastViT, TinyViT, etc.).
+
+This model processes raw audio waveforms into mel-spectrograms,
+then passes them through a timm backbone.
+"""
+import torch
+import torch.nn as nn
+import timm
+
+from .base import BaseAudioModel
+from torchlibrosa.stft import Spectrogram, LogmelFilterBank
+from torchlibrosa.augmentation import SpecAugmentation
+
+try:
+    from src.utils import do_mixup
+except ImportError:
+    # Fallback if src.utils is not accessible or doesn't have do_mixup
+    def do_mixup(x, mixup_lambda):
+        out = (x[0 :: 2].transpose(0, -1) * mixup_lambda[0 :: 2] + \
+               x[1 :: 2].transpose(0, -1) * mixup_lambda[1 :: 2]).transpose(0, -1)
+        return out
+
+
+class TimmAudioModel(BaseAudioModel):
+    def __init__(self, config, model_name="fastvit_t8.apple_in1k"):
+        """
+        Args:
+            config: Configuration object containing parameters for
+                    spectrogram generation and model classes.
+            model_name: The name of the timm model to instantiate.
+        """
+        super().__init__()
+        self.config = config
+
+        # --- Audio Feature Extraction ---
+        window = 'hann'
+        center = True
+        pad_mode = 'reflect'
+        ref = 1.0
+        amin = 1e-10
+        top_db = None
+
+        self.spectrogram_extractor = Spectrogram(
+            n_fft=config.window_size, hop_length=config.hop_size,
+            win_length=config.window_size, window=window, center=center,
+            pad_mode=pad_mode, freeze_parameters=True
+        )
+
+        self.logmel_extractor = LogmelFilterBank(
+            sr=config.sample_rate, n_fft=config.window_size,
+            n_mels=config.mel_bins, fmin=config.fmin, fmax=config.fmax,
+            ref=ref, amin=amin, top_db=top_db, freeze_parameters=True
+        )
+
+        self.spec_augmenter = SpecAugmentation(
+            time_drop_width=64, time_stripes_num=2,
+            freq_drop_width=4, freq_stripes_num=2
+        )
+
+        self.bn0 = nn.BatchNorm2d(config.mel_bins)
+
+        # --- Timm Backbone ---
+        classes_num = getattr(config, 'classes_num', 2)
+        
+        # We specify in_chans=1 because our mel-spectrogram has 1 channel.
+        # pretrained=True will load weights and adapt the first conv layer automatically in timm.
+        try:
+            self.backbone = timm.create_model(
+                model_name,
+                pretrained=True,
+                in_chans=1,
+                num_classes=classes_num
+            )
+        except Exception as e:
+            print(f"Failed to load timm model {model_name}: {e}. Falling back to pretrained=False")
+            self.backbone = timm.create_model(
+                model_name,
+                pretrained=False,
+                in_chans=1,
+                num_classes=classes_num
+            )
+
+
+    def forward(self, x: torch.Tensor, mix_lambda=None, infer_mode=False) -> dict:
+        """
+        Forward pass from waveform to predictions.
+        """
+        # 1. Feature Extraction: Waveform -> Mel-Spectrogram
+        x = self.spectrogram_extractor(x)  # (batch_size, 1, time_steps, freq_bins)
+        x = self.logmel_extractor(x)       # (batch_size, 1, time_steps, mel_bins)
+
+        x = x.transpose(1, 3)              # (batch_size, mel_bins, time_steps, 1)
+        x = self.bn0(x)
+        x = x.transpose(1, 3)              # (batch_size, 1, time_steps, mel_bins)
+
+        if self.training:
+            x = self.spec_augmenter(x)
+
+        if self.training and mix_lambda is not None:
+            x = do_mixup(x, mix_lambda)
+
+        # 2. Reshape for CNN/ViT backbone
+        # Current shape: (batch_size, 1, time_steps, mel_bins)
+        # However, vision models expect (batch_size, channels, height, width)
+        # We map: channels=1, height=mel_bins, width=time_steps
+        x = x.transpose(2, 3)              # (batch_size, 1, mel_bins, time_steps)
+
+        # 3. Backbone Forward Pass
+        # Returns (batch_size, num_classes)
+        clipwise_output = self.backbone(x)
+
+        # 4. Prepare Output Dictionary
+        # Create a dummy framewise tensor to satisfy the BaseAudioModel interface.
+        batch_size = x.size(0)
+        time_steps = x.size(3)
+        num_classes = clipwise_output.size(1)
+
+        # Output dummy framewise of shape (batch, time_steps, num_classes)
+        framewise_output = torch.zeros(
+            (batch_size, time_steps, num_classes),
+            device=x.device, dtype=x.dtype
+        )
+
+        output_dict = {
+            'clipwise_output': clipwise_output,
+            'framewise_output': framewise_output
+        }
+
+        return output_dict

@@ -1,0 +1,7 @@
+# Minimal runtime for the edge device (Orange Pi Zero 2W, aarch64) — no PyTorch.
+# benchmark_orangepi.py needs only onnxruntime + numpy;
+# inference_edge.py additionally needs librosa + scipy for preprocessing.
+onnxruntime>=1.24  # paper benchmarks: 1.24.2
+numpy
+librosa
+scipy

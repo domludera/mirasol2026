@@ -1,0 +1,46 @@
+# Data (download CirCor DigiScope into data/circor/, see README)
+data/circor/
+data/temp/
+data/results/
+*.npy
+*.wav
+
+# Experiment results & checkpoints (large, regenerate via scripts/)
+results/
+*.ckpt
+
+# Logs
+*.log
+logs/
+lightning_logs/
+
+# Outputs
+outputs/
+analysis/figures/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE / local tooling
+.idea/
+.vscode/
+.claude/settings.local.json
+
+# Virtual environment
+venv/
+
+# Lock files
+*.~lock*
+
+# ONNX exports are published as a GitHub Release asset (see exports/MANIFEST.txt)
+*.onnx
+*.onnx.data
+*.data
