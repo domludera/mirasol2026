@@ -1,0 +1,108 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+============================================================
+QAT for tinyvit
+============================================================
+  Checkpoint: data/results/tinyvit_3class_fold0/checkpoint/lightning_logs/version_1/checkpoints/l-epoch=119-acc=0.882.ckpt
+False -- dataset size 2982
+True -- dataset size 739
+
+  [FP32 Baseline]
+<repo>/run_qat.py:199: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+For migrations of users: 
+1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+see https://github.com/pytorch/ao/issues/2259 for more details
+  tq.prepare_qat(model.sed_model, inplace=True)
+<venv>/lib/python3.12/site-packages/torch/ao/quantization/observer.py:534: UserWarning: Please use quant_min and quant_max to specify the range for observers.                     reduce_range will be deprecated in a future release of PyTorch.
+  super().__init__(
+    Challenge Score: 0.9226
+    Accuracy: 0.8836
+    Macro F1: 0.6628
+
+  [QAT Fine-tuning] 10 epochs, lr=1e-05
+    Epoch 1/10: loss=1.4558 Score=0.6194 Acc=0.5767 F1=0.3818
+    Epoch 2/10: loss=0.9943 Score=0.4111 Acc=0.2487 F1=0.2083
+    Epoch 4/10: loss=0.8416 Score=0.5442 Acc=0.4709 F1=0.3400
+    Epoch 6/10: loss=0.8388 Score=0.3751 Acc=0.1587 F1=0.1180
+    Epoch 8/10: loss=0.8185 Score=0.3152 Acc=0.0899 F1=0.0855
+<repo>/run_qat.py:244: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+For migrations of users: 
+1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+see https://github.com/pytorch/ao/issues/2259 for more details
+  quantized_model_inner = tq.convert(model.sed_model, inplace=False)
+    Epoch 10/10: loss=0.8073 Score=0.3184 Acc=0.0899 F1=0.0612
+
+  [Post-QAT Evaluation]
+    Convert failed (cannot pickle 'module' object), using fake-quant metrics instead
+    Challenge Score: 0.3184
+    Accuracy: 0.0899
+    Macro F1: 0.0612
+
+  ==================================================
+  SUMMARY: tinyvit
+  ==================================================
+  FP32 Challenge Score:     0.9226
+  PTQ INT8 Challenge Score: 0.7840 (delta: -0.1386)
+  QAT INT8 Challenge Score: 0.3184 (delta: -0.6041)
+  QAT Recovery over PTQ:    -0.4656
+
+============================================================
+QAT for efficientnet_b0
+============================================================
+  Checkpoint: data/results/efficientnet_b0_3class_fold0/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=97-acc=0.871.ckpt
+False -- dataset size 2982
+True -- dataset size 739
+
+  [FP32 Baseline]
+<repo>/run_qat.py:199: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+For migrations of users: 
+1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+see https://github.com/pytorch/ao/issues/2259 for more details
+  tq.prepare_qat(model.sed_model, inplace=True)
+<venv>/lib/python3.12/site-packages/torch/ao/quantization/observer.py:534: UserWarning: Please use quant_min and quant_max to specify the range for observers.                     reduce_range will be deprecated in a future release of PyTorch.
+  super().__init__(
+    Challenge Score: 0.8953
+    Accuracy: 0.8571
+    Macro F1: 0.6225
+
+  [QAT Fine-tuning] 10 epochs, lr=1e-05
+    Epoch 1/10: loss=2.1522 Score=0.4755 Acc=0.3598 F1=0.2516
+    Epoch 2/10: loss=1.5863 Score=0.3130 Acc=0.2116 F1=0.1970
+    Epoch 4/10: loss=1.2686 Score=0.3195 Acc=0.1429 F1=0.1560
+    Epoch 6/10: loss=1.0590 Score=0.5289 Acc=0.4497 F1=0.3543
+    Epoch 8/10: loss=0.9316 Score=0.3141 Acc=0.0952 F1=0.1158
+<repo>/run_qat.py:244: DeprecationWarning: torch.ao.quantization is deprecated and will be removed in 2.10. 
+For migrations of users: 
+1. Eager mode quantization (torch.ao.quantization.quantize, torch.ao.quantization.quantize_dynamic), please migrate to use torchao eager mode quantize_ API instead 
+2. FX graph mode quantization (torch.ao.quantization.quantize_fx.prepare_fx,torch.ao.quantization.quantize_fx.convert_fx, please migrate to use torchao pt2e quantization API instead (prepare_pt2e, convert_pt2e) 
+3. pt2e quantization has been migrated to torchao (https://github.com/pytorch/ao/tree/main/torchao/quantization/pt2e) 
+see https://github.com/pytorch/ao/issues/2259 for more details
+  quantized_model_inner = tq.convert(model.sed_model, inplace=False)
+    Epoch 10/10: loss=0.8746 Score=0.3555 Acc=0.1587 F1=0.1602
+
+  [Post-QAT Evaluation]
+    Convert failed (cannot pickle 'module' object), using fake-quant metrics instead
+    Challenge Score: 0.3555
+    Accuracy: 0.1587
+    Macro F1: 0.1602
+
+  ==================================================
+  SUMMARY: efficientnet_b0
+  ==================================================
+  FP32 Challenge Score:     0.8953
+  PTQ INT8 Challenge Score: 0.7840 (delta: -0.1113)
+  QAT INT8 Challenge Score: 0.3555 (delta: -0.5398)
+  QAT Recovery over PTQ:    -0.4285
+
+
+============================================================
+FINAL QAT RESULTS
+============================================================
+  tinyvit: FP32=0.9226 -> QAT=0.3184 (delta: -0.6041)
+  efficientnet_b0: FP32=0.8953 -> QAT=0.3555 (delta: -0.5398)

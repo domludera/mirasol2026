@@ -1,26 +1,78 @@
 cff-version: 1.2.0
-message: "If you use this code or the released models, please cite the paper below."
-title: "A Low-Cost AI Stethoscope for Resource-Constrained Heart Murmur Screening — code and models"
-license: MIT
-repository-code: "https://github.com/domludera/mirasol2026"
+message: >-
+  If you use this software, the released models, or the committed
+  out-of-fold predictions, please cite the paper (preferred-citation
+  below). If you use the CirCor DigiScope dataset through this code,
+  you must also cite CirCor - see THIRD_PARTY.md section 6.
+title: >-
+  mirasol2026: a low-cost AI stethoscope for resource-constrained
+  heart murmur screening
+abstract: >-
+  Training, quantization, on-device benchmarking and analysis code for a
+  fully offline heart-murmur screening prototype built on an Orange Pi
+  Zero 2 W. Six CNN and transformer architectures are trained under one
+  protocol on the CirCor DigiScope phonocardiogram dataset with
+  patient-level five-fold cross-validation, exported to ONNX, and
+  benchmarked on the target hardware. The repository regenerates every
+  table and figure in the paper and its supplement.
+type: software
 authors:
-  - family-names: "Ludera"
-    given-names: "Dominik"
-    affiliation: "Concordia University"
-  - family-names: "Kersten-Oertel"
-    given-names: "Marta"
-    affiliation: "Concordia University"
+  - family-names: Ludera
+    given-names: Dominik
+    email: dominik.ludera@mail.concordia.ca
+    affiliation: >-
+      Department of Computer Science and Software Engineering,
+      Concordia University, Montreal, QC, Canada
+  - family-names: Kersten-Oertel
+    given-names: Marta
+    affiliation: >-
+      Department of Computer Science and Software Engineering,
+      Concordia University, Montreal, QC, Canada
+license: MIT
+# The MIT licence above covers this repository's own code only. Parts of the
+# tree are third-party MIT/Apache-2.0 code, the committed prediction dumps and
+# fold assignment are ODC-By 1.0 derived data, and the released FastViT ONNX
+# graphs derive from Apple's weights under Apple's own terms. See LICENSE and
+# THIRD_PARTY.md.
+version: 1.0.0
+repository-code: https://github.com/domludera/mirasol2026
+url: https://github.com/domludera/mirasol2026
+keywords:
+  - heart murmur detection
+  - phonocardiogram
+  - edge AI
+  - resource-constrained AI
+  - point-of-care screening
+  - quantization
+  - ONNX Runtime
+  - CirCor DigiScope
 preferred-citation:
   type: conference-paper
-  title: "A Low-Cost AI Stethoscope for Resource-Constrained Heart Murmur Screening"
+  title: >-
+    A Low-Cost AI Stethoscope for Resource-Constrained Heart Murmur
+    Screening
   authors:
-    - family-names: "Ludera"
-      given-names: "Dominik"
-      affiliation: "Concordia University"
-    - family-names: "Kersten-Oertel"
-      given-names: "Marta"
-      affiliation: "Concordia University"
-  collection-title: "MIRASOL Workshop, Medical Image Computing and Computer Assisted Intervention (MICCAI 2026)"
-  publisher:
-    name: "Springer"
+    - family-names: Ludera
+      given-names: Dominik
+      email: dominik.ludera@mail.concordia.ca
+      affiliation: >-
+        Department of Computer Science and Software Engineering,
+        Concordia University, Montreal, QC, Canada
+    - family-names: Kersten-Oertel
+      given-names: Marta
+      affiliation: >-
+        Department of Computer Science and Software Engineering,
+        Concordia University, Montreal, QC, Canada
   year: 2026
+  conference:
+    name: MIRASOL Workshop, MICCAI 2026
+    city: Strasbourg
+    country: FR
+  collection-title: >-
+    Medical Image Computing and Computer Assisted Intervention - MICCAI
+    2026 Satellite Events. Lecture Notes in Computer Science
+  collection-type: proceedings
+  publisher:
+    name: Springer
+  # doi: to be added once Springer assigns it; the camera-ready is frozen and
+  # cites only the repository URL, so the DOI will live here and in README.md.

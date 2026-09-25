@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 Dominik Ludera, Marta Kersten-Oertel
+Copyright (c) 2026 Dominik Ludera and Marta Kersten-Oertel
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,18 +20,83 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
---------------------------------------------------------------------------------
-Third-party code
+================================================================================
+SCOPE OF THIS LICENCE
+================================================================================
 
-Parts of main_moody.py, config/, model/htsat.py, model/layers.py and src/ are
-adapted from HTS-Audio-Transformer (https://github.com/RetroCirce/HTS-Audio-Transformer),
-released under the MIT License:
+The MIT licence above covers the original work in this repository only. Four
+categories of material distributed with, referenced by, or produced from this
+repository are NOT licensed by the paragraphs above. Nothing here purports to
+grant rights in material the authors do not own.
 
-    Copyright (c) 2022 Knut(Ke) Chen
+1. THIRD-PARTY SOURCE CODE
+   Substantial parts of the training core are derived from third-party projects
+   and remain under their own licences, which are compatible with but distinct
+   from the grant above:
 
-model/htsat.py in turn builds on Swin Transformer
-(https://github.com/microsoft/Swin-Transformer), released under the MIT License:
+     - HTS-AT (MIT, Copyright (c) 2022 Knut(Ke) Chen)
+     - Microsoft Swin-Transformer (MIT, Copyright (c) Microsoft Corporation)
+     - PyTorch Image Models / timm (Apache License 2.0, Copyright 2019
+       Ross Wightman) - primitives are vendored into
+       src/mirasol/models/layers.py and have been modified
+     - PANNs / audioset_tagging_cnn (MIT, Copyright (c) Qiuqiang Kong)
 
-    Copyright (c) Microsoft Corporation
+   The original copyright headers are preserved verbatim in every derived file.
+   Full licence texts, the file-by-file inventory and the Apache-2.0 change
+   statement are in THIRD_PARTY.md. Removing those headers - for example by a
+   PII or docstring cleanup pass - would breach the licences.
 
-Both are distributed under the same MIT terms as above.
+2. THE CirCor DigiScope DATASET
+   The CirCor DigiScope Phonocardiogram Dataset is licensed by its authors
+   under the Open Data Commons Attribution License v1.0 (ODC-By 1.0) and is
+   distributed by PhysioNet. It is NOT redistributed in this repository: no
+   CirCor audio file and no CirCor metadata file is committed here. Users must
+   obtain it from https://physionet.org/content/circor-heart-sound/ under its
+   own terms and must satisfy its attribution requirement independently. See
+   data/README.md and docs/data.md.
+
+3. DERIVED DATA COMMITTED IN THIS REPOSITORY (ODC-By 1.0, NOT MIT)
+   Two directories contain data derived from CirCor DigiScope and are therefore
+   Derivative Databases under ODC-By 1.0 rather than MIT-licensed software:
+
+     results/predictions/   out-of-fold model outputs; each row carries a
+                            CirCor recording filename (patient identifier and
+                            auscultation location) and the murmur target
+                            derived from CirCor's Murmur column
+     data/splits/           the patient-to-fold assignment, keyed by CirCor
+                            patient identifier
+
+   Anyone redistributing those two directories, or a database derived from
+   them, must comply with ODC-By 1.0 and must carry the CirCor attribution
+   given in THIRD_PARTY.md section 6. The identifiers involved are already
+   public in the CirCor distribution; nothing non-public is added here. Both
+   directories carry their own README.md restating this.
+
+4. PRE-TRAINED WEIGHTS OBTAINED FROM UPSTREAM
+   The released models were fine-tuned from ImageNet-pretrained backbones whose
+   weights are third-party artefacts under their own terms, and the exported
+   ONNX graphs are derivative works of those weights:
+
+     - FastViT: every released FastViT graph derives from
+       fastvit_t8.apple_in1k. The original implementation and weights are
+       Copyright (C) 2023 Apple Inc., All Rights Reserved, released under
+       Apple's own licence at https://github.com/apple/ml-fastvit - which is
+       NOT the MIT licence. An unqualified MIT claim over those graphs would
+       purport to relicense Apple's weights; this licence makes no such claim.
+     - TinyViT (tiny_vit_5m_224), MobileNetV3-Small
+       (mobilenetv3_small_100.lamb_in1k) and ResNet-18 (resnet18.a1_in1k)
+       derive from timm weights (Apache License 2.0).
+     - EfficientNet-B0 derives from torchvision
+       EfficientNet_B0_Weights.IMAGENET1K_V1 (BSD-3-Clause).
+     - HTS-AT is trained from scratch here (no pretrained checkpoint is
+       loaded), but the architecture is the MIT-licensed HTS-AT of section 1.
+
+   THIRD_PARTY.md section 5 records Apple's copyright, disclaimer and
+   no-endorsement terms in full.
+
+CLINICAL DISCLAIMER
+This software is a research prototype and is NOT a medical device. It has not
+been reviewed or approved by any regulatory authority for any clinical
+purpose. Nothing in this licence grants fitness for diagnostic use, and the
+warranty disclaimer above applies without qualification to any clinical,
+screening or triage application.

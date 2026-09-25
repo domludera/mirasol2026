@@ -1,0 +1,113 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mirasol"
+version = "1.0.0"
+description = "A low-cost AI stethoscope for resource-constrained heart murmur screening (MIRASOL @ MICCAI 2026)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY.md"]
+authors = [
+    { name = "Dominik Ludera", email = "dominik.ludera@mail.concordia.ca" },
+    { name = "Marta Kersten-Oertel" },
+]
+keywords = [
+    "heart-murmur-detection",
+    "phonocardiogram",
+    "edge-ai",
+    "onnxruntime",
+    "quantization",
+    "circor-digiscope",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+
+# ---------------------------------------------------------------------------
+# Base install: TORCH-FREE ON PURPOSE.
+#
+# Everything needed to regenerate every table in the paper from the committed
+# out-of-fold predictions in results/predictions/. `pip install -e .` must not
+# pull a 2 GB CUDA wheel to print Table 1. Versions are the ones the published
+# results were produced with (verified in the authors' environment, Python
+# 3.12.3); see docs/setup.md.
+# ---------------------------------------------------------------------------
+dependencies = [
+    "numpy==1.26.4",
+    "pandas==3.0.1",
+    "scikit-learn==1.8.0",
+    "scipy==1.17.0",
+    "matplotlib==3.10.8",
+]
+
+[project.optional-dependencies]
+# Alias for the base set, so `pip install -e '.[analysis]'` in the README and
+# `pip install -e .` install exactly the same thing.
+analysis = []
+
+# Training and dataset preparation. Needs a CUDA GPU in practice (150 epochs x
+# 30 fold-runs); CPU works for a smoke test.
+train = [
+    "torch==2.10.0",
+    "torchvision==0.25.0",
+    "timm==1.0.24",
+    "pytorch-lightning==2.6.1",
+    "torchlibrosa==0.1.0",
+    "librosa==0.11.0",
+    "soundfile==0.13.1",
+    "tqdm==4.67.3",
+    "tensorboard==2.19.0",
+]
+
+# ONNX export, quantization and desktop validation. Note that the DEVICE side
+# is deliberately not installed from here: deployment/edge/requirements-edge.txt
+# pins onnxruntime==1.24.2 (the version in the Table 4 caption) and nothing else
+# heavy, so the Orange Pi never needs torch.
+export = [
+    "onnx==1.20.1",
+    "onnxruntime==1.24.1",
+    "onnxconverter-common==1.16.0",
+]
+
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "pyyaml>=6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/domludera/mirasol2026"
+Repository = "https://github.com/domludera/mirasol2026"
+Issues = "https://github.com/domludera/mirasol2026/issues"
+Dataset = "https://physionet.org/content/circor-heart-sound/"
+
+[project.scripts]
+mirasol-train = "mirasol.cli.train:main"
+mirasol-prepare = "mirasol.data.prepare:main"
+mirasol-export = "mirasol.deployment.export:main"
+mirasol-count-params = "mirasol.cli.count_params:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["src/mirasol/models/htsat.py", "src/mirasol/models/layers.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+# E501 (line length) is reported by the formatter, not the linter, for the
+# ported files; B008 fires on argparse defaults built at import time.
+ignore = ["E501", "B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

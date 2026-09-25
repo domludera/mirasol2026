@@ -1,46 +1,143 @@
-# Data (download CirCor DigiScope into data/circor/, see README)
-data/circor/
-data/temp/
-data/results/
-*.npy
-*.wav
+# .gitignore for the mirasol2026 release.
+#
+# Two rules govern this file, and both were violated by the development tree
+# this release was extracted from:
+#
+#   1. Large binaries and third-party data must NEVER be committed. One ONNX
+#      graph here is 109.4 MiB, above GitHub's 100 MiB hard blob limit, and the
+#      CirCor DigiScope metadata is not ours to redistribute.
+#   2. The small artefacts that make the paper reproducible from a clean clone
+#      MUST be committed, even when a broad pattern above would swallow them.
+#      Those are re-included by negation below and are checked in CI with
+#      `git check-ignore -v`.
+#
+# If you add a pattern, re-run the CI check: a silent over-broad rule is how
+# the benchmark input, the quantization logs and all 61 prediction CSVs came to
+# be excluded from the original repository.
 
-# Experiment results & checkpoints (large, regenerate via scripts/)
-results/
-*.ckpt
-
-# Logs
-*.log
-logs/
-lightning_logs/
-
-# Outputs
-outputs/
-analysis/figures/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-.pytest_cache/
-.coverage
-htmlcov/
-
-# IDE / local tooling
-.idea/
-.vscode/
-.claude/settings.local.json
-
-# Virtual environment
-venv/
-
-# Lock files
-*.~lock*
-
-# ONNX exports are published as a GitHub Release asset (see exports/MANIFEST.txt)
+# ---------------------------------------------------------------------------
+# Model artefacts (published as GitHub Release assets, never committed)
+# ---------------------------------------------------------------------------
+# Anchored to the repository root on purpose: an unanchored `models/` rule would
+# also ignore src/mirasol/models/, which is source code.
+/exports/
+/models/
+deployment/edge/models/
 *.onnx
 *.onnx.data
+*.ort
+sym_shape_infer_temp.onnx
+*_temp.onnx
+
+# ONNX Runtime quantization residue. The UUID-named .data files embed the
+# generating machine's NIC MAC address in their filename; sym_shape_infer_temp
+# embeds absolute paths from the generating venv. Never commit either.
+# (This pattern anchors at the end of the name, so results/predictions/*.data.csv
+# is unaffected.)
 *.data
+
+# Training checkpoints (26 GB of them in the development tree; the release
+# ships results/checkpoint_accuracies.csv instead)
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+
+# ---------------------------------------------------------------------------
+# Data. CirCor DigiScope is ODC-By and is NOT redistributed here: see
+# data/README.md. `data/*` is deliberately single-level so that re-including
+# data/splits/ below actually works - git cannot re-include a file whose parent
+# directory is excluded.
+# ---------------------------------------------------------------------------
+data/*
+!data/README.md
+!data/splits/
+data/splits/*
+!data/splits/*.csv
+!data/splits/README.md
+
+# Prepared datasets and raw audio anywhere in the tree (1.66 GiB per .npy
+# configuration, 81 GB of WAVs)
+*.npy
+*.npz
+*.wav
+*.flac
+*.h5
+*.hdf5
+# ...except the synthetic Table 4 benchmark input: RandomState(42) noise plus
+# 50/120 Hz sinusoids, 512,384 B, no patient data, and the only input to the
+# on-device benchmark. Without it Table 4 is unreproducible from a clean clone.
+!deployment/edge/bench_input.npy
+
+# ---------------------------------------------------------------------------
+# Run outputs
+# ---------------------------------------------------------------------------
+/runs/
+/outputs/
+lightning_logs/
+tb_logs/
+events.out.tfevents.*
+*.log
+# ...except the three logs that are the only surviving evidence for the FP16
+# agreement, the static-INT8 collapse and the QAT run.
+!results/logs/*.log
+
+# Analysis outputs are regenerated, not committed - with the exception of the
+# committed prediction dumps and benchmark JSONs under results/.
+figures/
+/fig/
+*.pdf
+!docs/**/*.pdf
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.installed.cfg
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# ---------------------------------------------------------------------------
+# Editors, agents, notebooks and scratch (all carried machine-identifying
+# paths or credentials in the development tree)
+# ---------------------------------------------------------------------------
+.claude/
+.idea/
+.vscode/
+*.iml
+notebooks/
+.ipynb_checkpoints/
+*.ipynb
+temp/
+tmp/
+scratch/
+scratch_*.py
+
+# ---------------------------------------------------------------------------
+# OS and misc
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.~lock*
+*.swp
+*~

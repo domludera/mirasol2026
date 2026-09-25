@@ -1,0 +1,537 @@
+<venv>/lib/python3.12/site-packages/torch/functional.py:505: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4381.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+<repo>/export_onnx.py:318: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter has become the default. Learn more about the new export logic: https://docs.pytorch.org/docs/stable/onnx_export.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html
+  torch.onnx.export(
+<repo>/model/layers.py:86: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert H == self.img_size[0] and W == self.img_size[1], \
+<repo>/model/htsat.py:54: TracerWarning: Converting a tensor to a Python integer might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  B = int(windows.shape[0] / (H * W / window_size / window_size))
+<repo>/model/htsat.py:290: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  assert L == H * W, "input feature has wrong size"
+WARNING:root:Please consider to run pre-processing before quantization. Refer to example: https://github.com/microsoft/onnxruntime-inference-examples/blob/main/quantization/image_classification/cpu/ReadMe.md 
+
+======================================================================
+Exporting: htsat
+======================================================================
+  Loading checkpoint: data/results/htsat_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=149-acc=0.778-v1.ckpt
+  Mel-spectrogram shape: (1, 2001, 64)
+  Model input tensor shape: torch.Size([1, 1, 2001, 64])
+  Forward pass OK — output shape: torch.Size([1, 3])
+  Exporting FP32 ONNX to exports/htsat/model_fp32.onnx
+  FP32 ONNX size: 112064.4 KB
+  Running INT8 dynamic quantization...
+  INT8 ONNX size: 31864.4 KB (71.6% smaller)
+  Smoke-testing INT8 model...
+  INT8 inference OK — output: [[  8.45985   -10.581531   -1.0397378]], latency: 25.7 ms
+
+  ✅ htsat export complete!
+     FP32: exports/htsat/model_fp32.onnx (112064.4 KB)
+     INT8: exports/htsat/model_int8.onnx (31864.4 KB)
+<venv>/lib/python3.12/site-packages/torch/functional.py:505: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /pytorch/aten/src/ATen/native/TensorShape.cpp:4381.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Loaded 739 test samples from fold 0
+Label distribution: {'Present': 124, 'Unknown': 33, 'Absent': 582}
+
+  Pre-computing mel spectrograms...
+    100/739
+    200/739
+    300/739
+    400/739
+    500/739
+    600/739
+    700/739
+  Done — 739 mel specs, shape: (1, 2001, 64)
+
+── PyTorch FP32 Inference ──
+  Loading checkpoint: data/results/htsat_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=149-acc=0.778-v1.ckpt
+  100/739
+  200/739
+  300/739
+  400/739
+  500/739
+  600/739
+  700/739
+  Avg latency: 75.6 ms
+
+── ONNX INT8 Inference ──
+  100/739
+  200/739
+  300/739
+  400/739
+  500/739
+  600/739
+  700/739
+  Avg latency: 23.8 ms
+
+======================================================================
+VALIDATION REPORT — htsat
+======================================================================
+
+Metric                  PyTorch FP32       ONNX INT8      Delta
+--------------------------------------------------------------
+Accuracy                     0.5101         0.5101 +   0.0000
+F1                           0.3591         0.3599 +   0.0008
+Challenge_score              0.5861         0.5869 +   0.0008
+
+Metric                  PyTorch FP32       ONNX INT8
+----------------------------------------------------
+Avg Latency (ms)               75.6           23.8
+
+Prediction Agreement: 99.2% (733/739)
+
+⚠️  6 samples changed prediction after quantization:
+  Index    Name                      Label      PyTorch    ONNX      
+  ---------------------------------------------------------------
+  101      84983_PV.wav              Unknown    Unknown    Present   
+  157      50732_MV-0.wav            Absent     Absent     Unknown   
+  245      68708_TV.wav              Present    Absent     Present   
+  246      84751_AV.wav              Present    Absent     Present   
+  319      84876_MV.wav              Absent     Unknown    Absent    
+  585      84762_PV.wav              Absent     Absent     Present   
+
+✅ PASS — F1 delta (0.0008) is within 2% tolerance. Safe to deploy.
+<repo>/export_onnx.py:318: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter has become the default. Learn more about the new export logic: https://docs.pytorch.org/docs/stable/onnx_export.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html
+  torch.onnx.export(
+WARNING:root:Please consider to run pre-processing before quantization. Refer to example: https://github.com/microsoft/onnxruntime-inference-examples/blob/main/quantization/image_classification/cpu/ReadMe.md 
+
+======================================================================
+Exporting: efficientnet_b0
+======================================================================
+  Loading checkpoint: data/results/efficientnet_b0_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=142-acc=0.855.ckpt
+  Mel-spectrogram shape: (1, 2001, 64)
+  Model input tensor shape: torch.Size([1, 1, 2001, 64])
+  Forward pass OK — output shape: torch.Size([1, 3])
+  Exporting FP32 ONNX to exports/efficientnet_b0/model_fp32.onnx
+  FP32 ONNX size: 15667.1 KB
+  Running INT8 dynamic quantization...
+  INT8 ONNX size: 4289.7 KB (72.6% smaller)
+  Smoke-testing INT8 model...
+  INT8 inference OK — output: [[-0.33130774 -1.5392393   3.0292652 ]], latency: 82.0 ms
+
+  ✅ efficientnet_b0 export complete!
+     FP32: exports/efficientnet_b0/model_fp32.onnx (15667.1 KB)
+     INT8: exports/efficientnet_b0/model_int8.onnx (4289.7 KB)
+Loaded 739 test samples from fold 0
+Label distribution: {'Present': 124, 'Unknown': 33, 'Absent': 582}
+
+  Pre-computing mel spectrograms...
+    100/739
+    200/739
+    300/739
+    400/739
+    500/739
+    600/739
+    700/739
+  Done — 739 mel specs, shape: (1, 2001, 64)
+
+── PyTorch FP32 Inference ──
+  Loading checkpoint: data/results/efficientnet_b0_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=142-acc=0.855.ckpt
+  100/739
+  200/739
+  300/739
+  400/739
+  500/739
+  600/739
+  700/739
+  Avg latency: 20.7 ms
+
+── ONNX INT8 Inference ──
+  100/739
+  200/739
+  300/739
+  400/739
+  500/739
+  600/739
+  700/739
+  Avg latency: 86.6 ms
+
+======================================================================
+VALIDATION REPORT — efficientnet_b0
+======================================================================
+
+Metric                  PyTorch FP32       ONNX INT8      Delta
+--------------------------------------------------------------
+Accuracy                     0.8539         0.7767   -0.0771
+F1                           0.5870         0.2969   -0.2901
+Challenge_score              0.8777         0.8030   -0.0747
+
+Metric                  PyTorch FP32       ONNX INT8
+----------------------------------------------------
+Avg Latency (ms)               20.7           86.6
+
+Prediction Agreement: 82.8% (612/739)
+
+⚠️  127 samples changed prediction after quantization:
+  Index    Name                      Label      PyTorch    ONNX      
+  ---------------------------------------------------------------
+  3        49669_PV.wav              Unknown    Unknown    Absent    
+  5        49618_MV-0.wav            Unknown    Unknown    Absent    
+  6        49618_MV-1.wav            Unknown    Present    Absent    
+  13       50643_MV-0.wav            Absent     Present    Absent    
+  16       50744_MV.wav              Present    Present    Absent    
+  17       50744_PV.wav              Present    Present    Absent    
+  24       85075_AV.wav              Absent     Present    Absent    
+  48       85253_TV.wav              Absent     Present    Absent    
+  56       46778_MV.wav              Present    Present    Absent    
+  61       68194_AV.wav              Present    Present    Absent    
+  62       68194_MV.wav              Present    Present    Absent    
+  63       68194_PV.wav              Present    Present    Absent    
+  64       68194_TV.wav              Present    Present    Absent    
+  67       84885_AV.wav              Present    Present    Absent    
+  68       84885_MV.wav              Present    Present    Absent    
+  69       50790_AV.wav              Present    Present    Absent    
+  70       50790_MV.wav              Present    Present    Absent    
+  71       84697_AV.wav              Absent     Present    Absent    
+  78       50758_MV-1.wav            Absent     Absent     Unknown   
+  95       69079_AV.wav              Present    Present    Absent    
+  ... and 107 more
+
+❌ FAIL — F1 delta (0.2901) exceeds 5%. Consider re-calibrating or using FP16.
+<repo>/export_onnx.py:318: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter has become the default. Learn more about the new export logic: https://docs.pytorch.org/docs/stable/onnx_export.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html
+  torch.onnx.export(
+WARNING:root:Please consider to run pre-processing before quantization. Refer to example: https://github.com/microsoft/onnxruntime-inference-examples/blob/main/quantization/image_classification/cpu/ReadMe.md 
+
+======================================================================
+Exporting: fastvit
+======================================================================
+  Loading checkpoint: data/results/fastvit_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=111-acc=0.858.ckpt
+  Mel-spectrogram shape: (1, 2001, 64)
+  Model input tensor shape: torch.Size([1, 1, 2001, 64])
+  Forward pass OK — output shape: torch.Size([1, 3])
+  Exporting FP32 ONNX to exports/fastvit/model_fp32.onnx
+  FP32 ONNX size: 12811.6 KB
+  Running INT8 dynamic quantization...
+  INT8 ONNX size: 3546.7 KB (72.3% smaller)
+  Smoke-testing INT8 model...
+  INT8 inference OK — output: [[-118.45801  425.2612  -338.35736]], latency: 80.1 ms
+
+  ✅ fastvit export complete!
+     FP32: exports/fastvit/model_fp32.onnx (12811.6 KB)
+     INT8: exports/fastvit/model_int8.onnx (3546.7 KB)
+Loaded 739 test samples from fold 0
+Label distribution: {'Present': 124, 'Unknown': 33, 'Absent': 582}
+
+  Pre-computing mel spectrograms...
+    100/739
+    200/739
+    300/739
+    400/739
+    500/739
+    600/739
+    700/739
+  Done — 739 mel specs, shape: (1, 2001, 64)
+
+── PyTorch FP32 Inference ──
+  Loading checkpoint: data/results/fastvit_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=111-acc=0.858.ckpt
+  100/739
+  200/739
+  300/739
+  400/739
+  500/739
+  600/739
+  700/739
+  Avg latency: 14.9 ms
+
+── ONNX INT8 Inference ──
+  100/739
+  200/739
+  300/739
+  400/739
+  500/739
+  600/739
+  700/739
+  Avg latency: 73.8 ms
+
+======================================================================
+VALIDATION REPORT — fastvit
+======================================================================
+
+Metric                  PyTorch FP32       ONNX INT8      Delta
+--------------------------------------------------------------
+Accuracy                     0.8579         0.3775   -0.4804
+F1                           0.5701         0.2485   -0.3216
+Challenge_score              0.8826         0.3943   -0.4883
+
+Metric                  PyTorch FP32       ONNX INT8
+----------------------------------------------------
+Avg Latency (ms)               14.9           73.8
+
+Prediction Agreement: 36.7% (271/739)
+
+⚠️  468 samples changed prediction after quantization:
+  Index    Name                      Label      PyTorch    ONNX      
+  ---------------------------------------------------------------
+  2        49669_MV.wav              Unknown    Absent     Present   
+  3        49669_PV.wav              Unknown    Absent     Present   
+  4        49618_AV.wav              Unknown    Absent     Present   
+  5        49618_MV-0.wav            Unknown    Unknown    Absent    
+  7        85148_AV.wav              Absent     Absent     Present   
+  8        85148_MV.wav              Absent     Absent     Present   
+  9        85148_PV.wav              Absent     Absent     Present   
+  10       85148_TV.wav              Absent     Absent     Present   
+  15       50744_AV.wav              Present    Absent     Present   
+  16       50744_MV.wav              Present    Absent     Present   
+  17       50744_PV.wav              Present    Absent     Present   
+  18       50744_TV.wav              Present    Absent     Present   
+  19       50671_MV.wav              Absent     Absent     Present   
+  20       43852_AV.wav              Absent     Absent     Present   
+  23       43852_TV.wav              Absent     Absent     Present   
+  25       85075_MV.wav              Absent     Absent     Present   
+  26       85075_PV.wav              Absent     Absent     Present   
+  27       85075_TV.wav              Absent     Absent     Present   
+  28       84947_AV.wav              Absent     Absent     Present   
+  29       84947_MV.wav              Absent     Absent     Present   
+  ... and 448 more
+
+❌ FAIL — F1 delta (0.3216) exceeds 5%. Consider re-calibrating or using FP16.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+<repo>/export_onnx.py:318: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter has become the default. Learn more about the new export logic: https://docs.pytorch.org/docs/stable/onnx_export.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html
+  torch.onnx.export(
+<venv>/lib/python3.12/site-packages/timm/models/tiny_vit.py:390: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if H == self.window_size and W == self.window_size:
+<venv>/lib/python3.12/site-packages/timm/models/tiny_vit.py:397: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  padding = pad_b > 0 or pad_r > 0
+<venv>/lib/python3.12/site-packages/timm/models/tiny_vit.py:398: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if padding:
+<venv>/lib/python3.12/site-packages/timm/models/tiny_vit.py:414: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if padding:
+WARNING:root:Please consider to run pre-processing before quantization. Refer to example: https://github.com/microsoft/onnxruntime-inference-examples/blob/main/quantization/image_classification/cpu/ReadMe.md 
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/backbone/stages/stages.1/blocks/blocks.0/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__3"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/backbone/stages/stages.1/blocks/blocks.1/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__57"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/backbone/stages/stages.2/blocks/blocks.0/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__122"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/backbone/stages/stages.2/blocks/blocks.1/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__180"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/backbone/stages/stages.2/blocks/blocks.2/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__239"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/backbone/stages/stages.2/blocks/blocks.3/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__298"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/backbone/stages/stages.2/blocks/blocks.4/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__357"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/backbone/stages/stages.2/blocks/blocks.5/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__416"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/backbone/stages/stages.3/blocks/blocks.0/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__481"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+WARNING:root:Inference failed or unsupported type to quantize for tensor '/backbone/stages/stages.3/blocks/blocks.1/Slice_output_0', type is tensor_type {
+  elem_type: 7
+  shape {
+    dim {
+      dim_param: "unk__539"
+    }
+    dim {
+      dim_value: 2
+    }
+  }
+}
+.
+
+======================================================================
+Exporting: tinyvit
+======================================================================
+  Loading checkpoint: data/results/tinyvit_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=133-acc=0.859.ckpt
+  Mel-spectrogram shape: (1, 2001, 64)
+  Model input tensor shape: torch.Size([1, 1, 2001, 64])
+  Forward pass OK — output shape: torch.Size([1, 3])
+  Exporting FP32 ONNX to exports/tinyvit/model_fp32.onnx
+  FP32 ONNX size: 20584.4 KB
+  Running INT8 dynamic quantization...
+  INT8 ONNX size: 6128.7 KB (70.2% smaller)
+  Smoke-testing INT8 model...
+  INT8 inference OK — output: [[ 1.626237 -5.027818  2.659213]], latency: 64.4 ms
+
+  ✅ tinyvit export complete!
+     FP32: exports/tinyvit/model_fp32.onnx (20584.4 KB)
+     INT8: exports/tinyvit/model_int8.onnx (6128.7 KB)
+Loaded 739 test samples from fold 0
+Label distribution: {'Present': 124, 'Unknown': 33, 'Absent': 582}
+
+  Pre-computing mel spectrograms...
+    100/739
+    200/739
+    300/739
+    400/739
+    500/739
+    600/739
+    700/739
+  Done — 739 mel specs, shape: (1, 2001, 64)
+
+── PyTorch FP32 Inference ──
+  Loading checkpoint: data/results/tinyvit_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=133-acc=0.859.ckpt
+  100/739
+  200/739
+  300/739
+  400/739
+  500/739
+  600/739
+  700/739
+  Avg latency: 31.4 ms
+
+── ONNX INT8 Inference ──
+  100/739
+  200/739
+  300/739
+  400/739
+  500/739
+  600/739
+  700/739
+  Avg latency: 57.8 ms
+
+======================================================================
+VALIDATION REPORT — tinyvit
+======================================================================
+
+Metric                  PyTorch FP32       ONNX INT8      Delta
+--------------------------------------------------------------
+Accuracy                     0.8593         0.3085   -0.5507
+F1                           0.6151         0.2864   -0.3286
+Challenge_score              0.8854         0.4200   -0.4654
+
+Metric                  PyTorch FP32       ONNX INT8
+----------------------------------------------------
+Avg Latency (ms)               31.4           57.8
+
+Prediction Agreement: 29.4% (217/739)
+
+⚠️  522 samples changed prediction after quantization:
+  Index    Name                      Label      PyTorch    ONNX      
+  ---------------------------------------------------------------
+  0        85026_AV.wav              Absent     Present    Unknown   
+  1        85026_MV.wav              Absent     Present    Absent    
+  2        49669_MV.wav              Unknown    Absent     Unknown   
+  6        49618_MV-1.wav            Unknown    Present    Unknown   
+  7        85148_AV.wav              Absent     Absent     Present   
+  8        85148_MV.wav              Absent     Absent     Unknown   
+  9        85148_PV.wav              Absent     Absent     Present   
+  10       85148_TV.wav              Absent     Absent     Unknown   
+  11       50643_AV-0.wav            Absent     Present    Unknown   
+  12       50643_AV-1.wav            Absent     Absent     Unknown   
+  13       50643_MV-0.wav            Absent     Absent     Unknown   
+  15       50744_AV.wav              Present    Absent     Unknown   
+  16       50744_MV.wav              Present    Absent     Present   
+  17       50744_PV.wav              Present    Absent     Unknown   
+  20       43852_AV.wav              Absent     Absent     Unknown   
+  22       43852_PV.wav              Absent     Absent     Unknown   
+  23       43852_TV.wav              Absent     Absent     Unknown   
+  25       85075_MV.wav              Absent     Present    Unknown   
+  27       85075_TV.wav              Absent     Absent     Unknown   
+  28       84947_AV.wav              Absent     Absent     Unknown   
+  ... and 502 more
+
+❌ FAIL — F1 delta (0.3286) exceeds 5%. Consider re-calibrating or using FP16.
+==================================================
+Starting ONNX Export & Validation for htsat...
+==================================================
+Found best checkpoint: data/results/htsat_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=149-acc=0.778-v1.ckpt
+Running Export: ./venv/bin/python export_onnx.py --model_type htsat --checkpoint data/results/htsat_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=149-acc=0.778-v1.ckpt
+Running Validation: ./venv/bin/python validate_quantized.py --model_type htsat --checkpoint data/results/htsat_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=149-acc=0.778-v1.ckpt --onnx_model exports/htsat/model_int8.onnx
+==================================================
+Starting ONNX Export & Validation for efficientnet_b0...
+==================================================
+Found best checkpoint: data/results/efficientnet_b0_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=142-acc=0.855.ckpt
+Running Export: ./venv/bin/python export_onnx.py --model_type efficientnet_b0 --checkpoint data/results/efficientnet_b0_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=142-acc=0.855.ckpt
+Running Validation: ./venv/bin/python validate_quantized.py --model_type efficientnet_b0 --checkpoint data/results/efficientnet_b0_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=142-acc=0.855.ckpt --onnx_model exports/efficientnet_b0/model_int8.onnx
+==================================================
+Starting ONNX Export & Validation for fastvit...
+==================================================
+Found best checkpoint: data/results/fastvit_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=111-acc=0.858.ckpt
+Running Export: ./venv/bin/python export_onnx.py --model_type fastvit --checkpoint data/results/fastvit_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=111-acc=0.858.ckpt
+Running Validation: ./venv/bin/python validate_quantized.py --model_type fastvit --checkpoint data/results/fastvit_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=111-acc=0.858.ckpt --onnx_model exports/fastvit/model_int8.onnx
+==================================================
+Starting ONNX Export & Validation for tinyvit...
+==================================================
+Found best checkpoint: data/results/tinyvit_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=133-acc=0.859.ckpt
+Running Export: ./venv/bin/python export_onnx.py --model_type tinyvit --checkpoint data/results/tinyvit_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=133-acc=0.859.ckpt
+Running Validation: ./venv/bin/python validate_quantized.py --model_type tinyvit --checkpoint data/results/tinyvit_3class/checkpoint/lightning_logs/version_0/checkpoints/l-epoch=133-acc=0.859.ckpt --onnx_model exports/tinyvit/model_int8.onnx
+All models processed for ONNX export and validation.

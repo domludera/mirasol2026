@@ -1,0 +1,319 @@
+# Continuous integration for github.com/domludera/mirasol2026.
+#
+# Two jobs, with different purposes:
+#
+#   tests               ruff and pytest. The suite runs with no CirCor data, no
+#                       GPU and no .onnx file - exactly the situation a cloner
+#                       is in - so a green run means the repository reproduces
+#                       its published tables from what it ships.
+#   release-invariants  mechanical checks for the defects this release exists to
+#                       fix: leaked absolute paths, the HTS-AT/Swin attribution
+#                       that a cleanup pass would delete, oversized blobs,
+#                       .gitignore rules that swallow the committed evidence,
+#                       redistributed dataset files, peer-review identifiers and
+#                       personal commit addresses.
+#
+# Every invariant below regressed at least once in the development tree this
+# release was extracted from, which is why they are enforced by machine.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  # GitHub rejects any push containing a blob over 100 MiB, and the development
+  # tree tracked a 109.4 MiB ONNX graph. Fail well before the hard limit.
+  MAX_BLOB_BYTES: "52428800"
+
+jobs:
+  tests:
+    name: ruff + pytest
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install the package and its dev extra
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: ruff
+        run: ruff check .
+
+      - name: pytest
+        # CIRCOR_ROOT and MIRASOL_LEGACY_SOURCE are deliberately unset: the
+        # tests needing the un-redistributable dataset or the pre-release
+        # working tree must skip, and every other test must still pass.
+        run: pytest -q
+
+      - name: Confirm the suite did not collapse to a handful of tests
+        # A collection error in one module would otherwise show up as a smaller
+        # but still green run, quietly retiring the checks that protect the
+        # published numbers.
+        run: |
+          set -uo pipefail
+          status=0
+          for module in test_golden_tables test_metrics test_splits \
+                        test_mel_parity test_edge_mel_parity; do
+            count=$(python -m pytest --collect-only -o addopts= "tests/${module}.py" \
+                    | sed -n 's/^collected \([0-9]*\) items\?.*/\1/p' | head -1)
+            echo "tests/${module}.py: ${count:-0} tests collected"
+            if [ "${count:-0}" -lt 5 ]; then
+              echo "::error file=tests/${module}.py::only ${count} tests collected"
+              status=1
+            fi
+          done
+          exit "${status}"
+
+  release-invariants:
+    name: release invariants
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: the blob-size gate inspects every committed object,
+          # not just the working tree.
+          fetch-depth: 0
+
+      - name: No absolute paths outside tests/
+        # Nine scripts in the development tree hardcoded a home directory, which
+        # made the artifacts the supplement promises unrunnable for anyone else.
+        # The pattern is assembled at runtime so this file cannot match itself.
+        run: |
+          set -uo pipefail
+          needle="/ho""me/"
+          if git grep -I -n --fixed-strings -e "${needle}" -- ':!tests/'; then
+            echo "::error::an absolute home-directory path is committed; resolve"
+            echo "paths through mirasol.paths instead (repo root from __file__,"
+            echo "overridable by environment variable and CLI flag)"
+            exit 1
+          fi
+          echo "no absolute home-directory paths outside tests/"
+
+      - name: HTS-AT and Swin attribution intact
+        # Licence obligation, not style: seven files derive from HTS-AT (MIT,
+        # (c) 2022 Knut(Ke) Chen) and two of those also from Microsoft
+        # Swin-Transformer (MIT). knutchen@ucsd.edu is a copyright notice.
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+
+          HTS_AT = (
+              "# Ke Chen",
+              "# knutchen@ucsd.edu",
+              "# HTS-AT: A HIERARCHICAL TOKEN-SEMANTIC AUDIO TRANSFORMER FOR "
+              "SOUND CLASSIFICATION AND DETECTION",
+          )
+          SWIN = (
+              "# below codes are based and referred from "
+              "https://github.com/microsoft/Swin-Transformer",
+              "# Swin Transformer for Computer Vision: "
+              "https://arxiv.org/pdf/2103.14030.pdf",
+          )
+          NOTICES = (
+              "# SPDX-License-Identifier: MIT",
+              "# Derived from HTS-AT, Copyright (c) 2022 Knut(Ke) Chen - see "
+              "THIRD_PARTY.md",
+              "# Modified 2026 for MIRASOL/MICCAI heart-murmur screening",
+          )
+          # target -> upstream description line, kept byte-for-byte as line 4.
+          DERIVED = {
+              "src/mirasol/config/defaults.py":
+                  "# The configuration for training the model",
+              "src/mirasol/cli/train.py":
+                  "# The main code for training and evaluating HTSAT",
+              "src/mirasol/data/dataset.py": "# Dataset Collections",
+              "src/mirasol/training/lightning_module.py":
+                  "# The Model Training Wrapper",
+              "src/mirasol/training/utils.py": "# Some Useful Common Methods",
+              "src/mirasol/models/htsat.py": "# Model Core",
+              "src/mirasol/models/layers.py":
+                  "# Some layers designed on the model",
+          }
+          SWIN_FILES = ("src/mirasol/models/htsat.py", "src/mirasol/models/layers.py")
+
+          failures = []
+          for name, description in DERIVED.items():
+              path = Path(name)
+              if not path.is_file():
+                  failures.append(f"{name}: missing")
+                  continue
+              lines = path.read_text(encoding="utf-8").splitlines()
+              if tuple(lines[:3]) != HTS_AT:
+                  failures.append(f"{name}: lines 1-3 are not the HTS-AT notice")
+                  continue
+              if lines[3] != description:
+                  failures.append(
+                      f"{name}: line 4 is {lines[3]!r}, expected {description!r}"
+                  )
+              head = lines[:12]
+              for notice in NOTICES:
+                  if notice not in head:
+                      failures.append(f"{name}: missing {notice!r}")
+              if name in SWIN_FILES and tuple(lines[4:6]) != SWIN:
+                  failures.append(f"{name}: lines 5-6 are not the Swin notice")
+
+          for failure in failures:
+              print(f"::error::{failure}")
+          if failures:
+              print(
+                  "The HTS-AT header is a licence obligation. Restore lines 1-4 "
+                  "byte-for-byte (and lines 5-6 for the two Swin files), then "
+                  "append the SPDX and provenance notices. See THIRD_PARTY.md."
+              )
+              sys.exit(1)
+          print(f"attribution intact in {len(DERIVED)} derived files")
+          PY
+
+      - name: Third-party notices present
+        run: |
+          set -uo pipefail
+          status=0
+          for file in LICENSE THIRD_PARTY.md CITATION.cff; do
+            if [ ! -f "$file" ]; then
+              echo "::error::$file is missing"
+              status=1
+            fi
+          done
+          if [ -f THIRD_PARTY.md ]; then
+            for upstream in HTS-AT Swin timm Apple CirCor ODC; do
+              if ! grep -qi -- "$upstream" THIRD_PARTY.md; then
+                echo "::error file=THIRD_PARTY.md::no notice for ${upstream}"
+                status=1
+              fi
+            done
+          fi
+          exit "${status}"
+
+      - name: No blob over 50 MB, in the working tree or in history
+        run: |
+          set -uo pipefail
+          git ls-files -z \
+            | xargs -0 stat -c '%s %n' \
+            | awk -v max="${MAX_BLOB_BYTES}" '$1 > max' > oversized-worktree.txt
+          git rev-list --objects --all \
+            | git cat-file --batch-check='%(objecttype) %(objectsize) %(rest)' \
+            | awk -v max="${MAX_BLOB_BYTES}" '$1 == "blob" && $2 > max {print $2, $3}' \
+            > oversized-history.txt
+          if [ -s oversized-worktree.txt ] || [ -s oversized-history.txt ]; then
+            echo "::error::a blob exceeds ${MAX_BLOB_BYTES} bytes; publish model"
+            echo "artifacts as Release assets instead of committing them"
+            cat oversized-worktree.txt oversized-history.txt
+            exit 1
+          fi
+          echo "no blob exceeds ${MAX_BLOB_BYTES} bytes"
+
+      - name: Committed evidence survives .gitignore
+        # '*.npy' excluded the only input to the Table 4 benchmark, '*.log' the
+        # only evidence for the quantization claims, and 'outputs/' all 61
+        # prediction dumps. Each negation is verified with git check-ignore, and
+        # each file it rescues must be present and tracked.
+        run: |
+          set -uo pipefail
+          status=0
+
+          for negation in '!data/README.md' '!data/splits/' \
+                          '!deployment/edge/bench_input.npy' \
+                          '!results/logs/*.log'; do
+            if ! grep -qxF -- "${negation}" .gitignore; then
+              echo "::error file=.gitignore::missing negation ${negation}"
+              status=1
+            fi
+          done
+
+          required=$(printf '%s\n' \
+            data/README.md \
+            data/splits/folds.csv \
+            deployment/edge/bench_input.npy \
+            results/checkpoint_accuracies.csv \
+            results/predictions/README.md \
+            results/logs/*.log \
+            results/predictions/*.data.csv \
+            results/benchmarks/*.json)
+
+          for file in ${required}; do
+            if [ ! -f "${file}" ]; then
+              echo "::error::${file} is missing from the release tree"
+              status=1
+              continue
+            fi
+            if ! git ls-files --error-unmatch -- "${file}" >/dev/null 2>&1; then
+              echo "::error::${file} exists but is not tracked by git"
+              status=1
+            fi
+            if git check-ignore -q --no-index -- "${file}"; then
+              echo "::error::${file} is matched by a .gitignore rule:"
+              git check-ignore -v --no-index -- "${file}"
+              status=1
+            fi
+          done
+
+          logs=$(ls -1 results/logs/*.log 2>/dev/null | wc -l)
+          dumps=$(ls -1 results/predictions/*.data.csv 2>/dev/null | wc -l)
+          echo "force-added: ${logs} run logs, ${dumps} prediction dumps"
+          if [ "${logs}" -ne 3 ] || [ "${dumps}" -ne 61 ]; then
+            echo "::error::expected 3 run logs and 61 prediction dumps"
+            status=1
+          fi
+          exit "${status}"
+
+      - name: No dataset, checkpoint or ONNX file is redistributed
+        # CirCor DigiScope is ODC-By and 942 individual-level records are not
+        # ours to publish; the ONNX graphs and checkpoints go to Release assets.
+        run: |
+          set -uo pipefail
+          status=0
+          if git ls-files | grep -E '^data/circor/|\.onnx(\.data)?$|\.ckpt$|\.pt$|\.wav$'; then
+            echo "::error::the files above must not be committed (see .gitignore)"
+            status=1
+          fi
+          if git ls-files '*.npy' | grep -v '^deployment/edge/bench_input\.npy$'; then
+            echo "::error::only the synthetic benchmark input may be committed"
+            status=1
+          fi
+          exit "${status}"
+
+      - name: No peer-review artefacts or personal addresses
+        # Docstrings in the development tree named individual reviewers, the
+        # response-to-reviewers document and a prior rejection. As with the path
+        # gate above, the needles are assembled at runtime from split literals
+        # so that this file cannot match itself.
+        run: |
+          set -uo pipefail
+          status=0
+          needles=()
+          for needle in 'vF''Xm' 'ZT''cm' 'rebut''tal' \
+                        'fabricated re''ferences' 'PROOF_''STAGE'; do
+            needles+=(-e "${needle}")
+          done
+          if git grep -I -n -i "${needles[@]}"; then
+            echo "::error::peer-review material must not ship; state the"
+            echo "scientific motivation instead"
+            status=1
+          fi
+          if git log --format='%ae%n%ce' \
+             | sort -u \
+             | grep -Ei '@(gmail|googlemail|hotmail|yahoo|outlook|live|icloud)\.'; then
+            echo "::error::commits carry a personal webmail address; use the"
+            echo "published institutional address or the GitHub noreply form"
+            status=1
+          fi
+          exit "${status}"

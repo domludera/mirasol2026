@@ -1,0 +1,28 @@
+# Runtime dependencies for deployment/edge/ -- the only directory that is
+# copied onto the Orange Pi Zero 2W (Armbian, aarch64, Python 3.12).
+#
+# Deliberately torch-free: nothing here pulls in PyTorch, timm or
+# pytorch_lightning. Install with
+#
+#     python3 -m pip install -r requirements-edge.txt
+#
+# onnxruntime is pinned EXACTLY. It is the version named in Table 4's caption,
+# and quantize_static / graph-optimisation defaults change between ONNX Runtime
+# releases, so an unpinned install can silently change the measured latency and
+# even the predictions of the released quantized graphs.
+onnxruntime==1.24.2
+
+# numpy 1.26.x is the series the released graphs and bench_input.npy were
+# produced and validated with. 2.x is not exercised on the device.
+numpy>=1.26,<2.0
+
+# scipy provides the Butterworth bandpass and the real FFT used by mel.py.
+scipy>=1.11,<2.0
+
+# soundfile decodes the recordings. libsndfile must be present on the image:
+#     sudo apt-get install -y libsndfile1
+soundfile>=0.12,<0.14
+
+# librosa is intentionally ABSENT. mel.py reimplements the parts of it that the
+# training pipeline used, bit-for-bit, in numpy + scipy, so numba/llvmlite never
+# has to be built from source on aarch64.
