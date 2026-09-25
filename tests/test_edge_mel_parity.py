@@ -9,8 +9,9 @@ classifies a different input representation than every published number was
 measured on, silently.
 
 These tests therefore compare *behaviour*, function by function, on identical
-inputs, and require exact equality: same constants, same filterbank, same
-log-mel, same windowing, same end-to-end tensor.  They also assert the edge
+inputs: exact equality for constants, filterbank, filtering, normalisation and
+windowing, and agreement within float32 rounding (``MEL_ATOL_DB``) for the
+log-mel and the end-to-end tensor, whose last bits depend on the BLAS kernel.  They also assert the edge
 copy stays free of torch, librosa and of any dependency on the installed
 package, since the whole point of the directory is that it needs neither.
 """
@@ -21,7 +22,7 @@ import ast
 
 import numpy as np
 import pytest
-from conftest import BENCH_INPUT, BENCH_INPUT_ATOL_DB, EDGE_MEL, bench_waveform, synthetic_waveform
+from conftest import BENCH_INPUT, EDGE_MEL, MEL_ATOL_DB, bench_waveform, synthetic_waveform
 
 from mirasol.signal import mel as package
 from mirasol.signal.mel import DEFAULT_BANDPASS, DEFAULT_MEL
@@ -72,29 +73,29 @@ def test_mel_filterbanks_are_identical(edge_mel) -> None:
 
 
 @pytest.mark.parametrize("n_samples", (240_000, *SHORT_LENGTHS))
-def test_log_mel_spectrograms_are_identical(edge_mel, n_samples: int) -> None:
+def test_log_mel_spectrograms_match(edge_mel, n_samples: int) -> None:
     waveform = synthetic_waveform(n_samples)
     expected = package.log_mel_spectrogram(waveform, DEFAULT_MEL)
     got = edge_mel.log_mel_spectrogram(waveform)
     assert got.shape == expected.shape
     assert got.dtype == expected.dtype == np.float32
-    assert np.array_equal(got, expected)
+    np.testing.assert_allclose(got, expected, rtol=0, atol=MEL_ATOL_DB)
 
 
-def test_model_input_tensors_are_identical(edge_mel) -> None:
+def test_model_input_tensors_match(edge_mel) -> None:
     """The tensor handed to ``onnxruntime`` must be the same on both paths."""
     window = synthetic_waveform(DEFAULT_MEL.clip_samples)
     expected = package.waveform_to_model_input(window, DEFAULT_MEL)
     got = edge_mel.clip_to_model_input(window)
     assert got.shape == expected.shape == DEFAULT_MEL.input_shape
-    assert np.array_equal(got, expected)
+    np.testing.assert_allclose(got, expected, rtol=0, atol=MEL_ATOL_DB)
 
 
 def test_both_paths_reproduce_the_committed_benchmark_input(edge_mel) -> None:
     """The Table 4 input tensor, regenerated through the edge module."""
     expected = np.load(BENCH_INPUT)
     got = edge_mel.clip_to_model_input(bench_waveform(edge_mel.CLIP_SAMPLES))
-    np.testing.assert_allclose(got, expected, rtol=0, atol=BENCH_INPUT_ATOL_DB)
+    np.testing.assert_allclose(got, expected, rtol=0, atol=MEL_ATOL_DB)
 
 
 # --------------------------------------------------------------------------
@@ -138,7 +139,7 @@ def test_windowing_is_identical(edge_mel, n_samples: int) -> None:
 
 
 @pytest.mark.parametrize("bandpass", [True, False])
-def test_full_recording_pipelines_are_identical(edge_mel, bandpass: bool) -> None:
+def test_full_recording_pipelines_match(edge_mel, bandpass: bool) -> None:
     """Including the no-filter variant used for the Table S10 ablation."""
     waveform = synthetic_waveform(190_000)
     expected = package.preprocess_recording(
@@ -154,7 +155,7 @@ def test_full_recording_pipelines_are_identical(edge_mel, bandpass: bool) -> Non
     )
     assert got.shape == expected.shape
     assert got.shape[1:] == DEFAULT_MEL.input_shape[1:]
-    assert np.array_equal(got, expected)
+    np.testing.assert_allclose(got, expected, rtol=0, atol=MEL_ATOL_DB)
 
 
 def test_both_modules_reject_a_wrong_sample_rate(edge_mel) -> None:

@@ -11,7 +11,7 @@ Three anchors, in decreasing order of availability:
 
 1. ``deployment/edge/bench_input.npy``, committed, is the log-mel of a
    fixed-seed synthetic waveform and the only input to the Table 4 benchmark.
-   Reproducing it bit-for-bit needs nothing but the repository.
+   Reproducing it needs nothing but the repository.
 2. librosa, if installed, gives the reference ``stft`` and ``filters.mel`` the
    original implementation called.
 3. the pre-release working tree, if ``MIRASOL_LEGACY_SOURCE`` points at it,
@@ -27,7 +27,7 @@ import numpy as np
 import pytest
 from conftest import (
     BENCH_INPUT,
-    BENCH_INPUT_ATOL_DB,
+    MEL_ATOL_DB,
     bench_waveform,
     legacy_config,
     load_legacy_function,
@@ -95,7 +95,7 @@ def test_reproduces_the_committed_benchmark_input() -> None:
     assert expected.shape == PUBLISHED_INPUT_SHAPE
     assert got.shape == expected.shape
     assert got.dtype == expected.dtype == np.float32
-    np.testing.assert_allclose(got, expected, rtol=0, atol=BENCH_INPUT_ATOL_DB)
+    np.testing.assert_allclose(got, expected, rtol=0, atol=MEL_ATOL_DB)
 
 
 def test_model_input_rejects_a_wrongly_sized_window() -> None:
