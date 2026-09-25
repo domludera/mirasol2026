@@ -55,6 +55,9 @@ PATHS: Final[mirasol_paths.Paths] = mirasol_paths.default_paths()
 EDGE_DIR: Final[Path] = REPO_ROOT / "deployment" / "edge"
 EDGE_MEL: Final[Path] = EDGE_DIR / "mel.py"
 BENCH_INPUT: Final[Path] = EDGE_DIR / "bench_input.npy"
+# bench_input.npy was generated on the author's workstation; other CPUs take
+# different FFT/SIMD paths, so cross-machine comparisons allow float32 rounding (dB).
+BENCH_INPUT_ATOL_DB: Final[float] = 1e-3
 
 LEGACY_SOURCE_ENV: Final[str] = "MIRASOL_LEGACY_SOURCE"
 

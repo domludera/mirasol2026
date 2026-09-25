@@ -21,7 +21,7 @@ import ast
 
 import numpy as np
 import pytest
-from conftest import BENCH_INPUT, EDGE_MEL, bench_waveform, synthetic_waveform
+from conftest import BENCH_INPUT, BENCH_INPUT_ATOL_DB, EDGE_MEL, bench_waveform, synthetic_waveform
 
 from mirasol.signal import mel as package
 from mirasol.signal.mel import DEFAULT_BANDPASS, DEFAULT_MEL
@@ -94,7 +94,7 @@ def test_both_paths_reproduce_the_committed_benchmark_input(edge_mel) -> None:
     """The Table 4 input tensor, regenerated through the edge module."""
     expected = np.load(BENCH_INPUT)
     got = edge_mel.clip_to_model_input(bench_waveform(edge_mel.CLIP_SAMPLES))
-    assert np.array_equal(got, expected)
+    np.testing.assert_allclose(got, expected, rtol=0, atol=BENCH_INPUT_ATOL_DB)
 
 
 # --------------------------------------------------------------------------
